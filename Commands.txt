@@ -1,0 +1,66 @@
+go build -o main .
+
+To use local Docker images with Minikube:
+
+Configure Docker to Use Minikube’s Docker Daemon:
+Run the following command to point your Docker CLI to Minikube’s Docker daemon:
+eval $(minikube -p minikube docker-env)
+
+This command sets up your environment to use the Docker daemon inside Minikube.
+
+
+
+docker build -t rocky20/go-web-app:v1 .
+
+docker push rocky20/go-web-app:v1
+
+docker run -p 8080:8080 -it rocky20/go-web-app:v1
+
+kubectl apply -f deployment.yaml --validate=true
+kubectl apply -f service.yaml --validate=true
+kubectl apply -f ingress.yaml --validate=true
+
+kubectl edit svc/go-app-svc
+
+Set the type to NodePort
+____________________________
+$ kubectl get svc -o wide
+NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+go-app-svc   NodePort    10.102.181.10   <none>        80:30972/TCP   5m7s
+kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP        21d
+
+$ kubectl get no -o wide
+NAME       STATUS   ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE              KERNEL-VERSION   CONTAINER-RUNTIME
+minikube   Ready    control-plane   21d   v1.28.3   172.27.148.177   <none>        Buildroot 2023.02.9   5.10.207         docker://26.0.2
+
+Access the application locally
+http://172.27.148.177:30972/courses
+
+
+The ingress controller can be installed through minikube's addons system:
+minikube addons enable ingress
+https://kubernetes.github.io/ingress-nginx/deploy/#minikube
+
+The ingress controller that you use, is a GO program which is written by the Load Balancer Company (AWS/Azure)
+It will watch for the Ingress resource and creates a Load Balancer as for the Ingress Config.
+
+
+In our application, We are telling the Ingress controller, create a LB, when i access the Load balancer at (go-app.local)
+It must forward the request to the service (go-app-svc)
+
+
+$  kubectl get po -n ingress-nginx
+NAME                                        READY   STATUS      RESTARTS   AGE
+ingress-nginx-admission-create-5cvpl        0/1     Completed   0          2m4s   
+ingress-nginx-admission-patch-jrspr         0/1     Completed   0          2m4s   
+ingress-nginx-controller-68cd94d4bd-hnh4w   1/1     Running     0          2m4s   
+
+
+This pod: ingress-nginx-controller-68cd94d4bd-hnh4w   will watch for the ingress resources with the ingressClassName: nginx
+
+
+$ kubectl get ing
+NAME     CLASS   HOSTS          ADDRESS          PORTS   AGE
+go-app   nginx   go-app.local   172.27.148.177   80      37m
+
+
