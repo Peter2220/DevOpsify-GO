@@ -55,24 +55,18 @@ ingress-nginx-admission-create-5cvpl        0/1     Completed   0          2m4s
 ingress-nginx-admission-patch-jrspr         0/1     Completed   0          2m4s   
 ingress-nginx-controller-68cd94d4bd-hnh4w   1/1     Running     0          2m4s   
 
-
 This pod: ingress-nginx-controller-68cd94d4bd-hnh4w   will watch for the ingress resources with the ingressClassName: nginx
-
 
 $ kubectl get ing
 NAME     CLASS   HOSTS          ADDRESS          PORTS   AGE
 go-app   nginx   go-app.local   172.27.148.177   80      37m
 
-
-
-
 HELM Installation on Windows
 winget install Helm.Helm
 
-
+___________________________________________________
 
 helm create go-app-chart
-
 
 Chart.yaml // Info of the Chart
 rm -rf templates/*
@@ -107,7 +101,7 @@ replicaset.apps/go-app-84b6c7c48b   1         1         1       2m34s
 
 $ helm uninstall go-app
 
-_________________
+___________________________________________________
 
 CICD PART
 
@@ -119,3 +113,33 @@ CI (GitHub Actions):
 
  CD:
   - ArgoCD watches for the values.yaml updates, then pulls the Helm Chart and Deploys it to the Kubernetes Cluster
+___________________________________________________
+
+ArgoCD Implementation
+
+kubectl create ns argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+kubectl patch service/argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+
+Minikube argocd-server stuck in Pending state? 
+argocd-server  LoadBalancer   10.109.195.168   <pending>     80:32583/TCP,443:31520/TCP   8m50s
+
+Minikube does not support external LoadBalancers out of the box. Instead, you can use minikube tunnel to create a network route to access the LoadBalancer service.
+
+minikube tunnel
+
+kubectl get no -o wide
+Copy the Internal IP address of the node
+
+kubectl get svc -n argocd
+
+Copy the port number, then visit: http://IP:port_number
+
+kubectl get secret -n argocd
+
+$ kubectl edit secret argocd-initial-admin-secret -n argocd
+
+$ echo base64_PASSWORD | base64 --decode
+
+https://IPADDRESS:32583/login
