@@ -15,6 +15,6 @@ spec:
       containers:
         - name: go-app
           image: rocky20/go-app:v1
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
