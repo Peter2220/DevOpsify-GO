@@ -64,3 +64,59 @@ NAME     CLASS   HOSTS          ADDRESS          PORTS   AGE
 go-app   nginx   go-app.local   172.27.148.177   80      37m
 
 
+
+
+HELM Installation on Windows
+winget install Helm.Helm
+
+
+
+helm create go-app-chart
+
+
+Chart.yaml // Info of the Chart
+rm -rf templates/*
+cp ../../k8s/manifests/* .
+
+
+vim deployment.yaml
+
+          image: rocky20/go-web-app:{{ .Values.image.tag }}
+
+Then remove everything in the values.yaml file, add the following
+image:
+  tag: "v1"
+
+cd ..
+
+helm install go-app ./go-app-chart
+$ kubectl get all
+NAME                          READY   STATUS    RESTARTS   AGE
+pod/go-app-84b6c7c48b-kh56q   1/1     Running   0          2m34s
+
+NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+service/go-app-svc   ClusterIP   10.101.184.148   <none>        80/TCP    2m34s
+service/kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP   22d
+
+NAME                     READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/go-app   1/1     1            1           2m34s
+
+NAME                                DESIRED   CURRENT   READY   AGE
+replicaset.apps/go-app-84b6c7c48b   1         1         1       2m34s
+
+
+$ helm uninstall go-app
+
+_________________
+
+CICD PART
+
+CI (GitHub Actions):
+ - Build & Test (Unit Test)
+ - Static Code Analysis
+ - Create Docker image & Push it
+ - Update Helm with the Helm with the Created Docker image
+
+ CD:
+  - ArgoCD pulls the Helm Chart and Deploys it to the Kubernetes Cluster
+  
