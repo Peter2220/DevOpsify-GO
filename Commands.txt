@@ -118,5 +118,4 @@ CI (GitHub Actions):
  - Update Helm with the Helm with the Created Docker image
 
  CD:
-  - ArgoCD pulls the Helm Chart and Deploys it to the Kubernetes Cluster
-  
+  - ArgoCD watches for the values.yaml updates, then pulls the Helm Chart and Deploys it to the Kubernetes Cluster
